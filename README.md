@@ -1,11 +1,11 @@
 # restui.nvim
 
-A Neovim plugin to open [restui](https://github.com/diegomontoya/restui) in a floating terminal window, similar to how lazygit.nvim wraps lazygit.
+A Neovim plugin to open [restui](https://github.com/Di3go0-0/restui) in a floating terminal window, similar to how lazygit.nvim wraps lazygit.
 
 ## Requirements
 
 - Neovim >= 0.8
-- [restui](https://github.com/diegomontoya/restui) binary in your `PATH`
+- [restui](https://github.com/Di3go0-0/restui) binary in your `PATH`
 
 ```sh
 cargo install restui
@@ -17,7 +17,7 @@ cargo install restui
 
 ```lua
 {
-    "diegomontoya/restui.nvim",
+    "Di3go0-0/restui.nvim",
     dependencies = {},
     config = function()
         require("restui").setup()
@@ -32,7 +32,7 @@ cargo install restui
 
 ```lua
 use {
-    "diegomontoya/restui.nvim",
+    "Di3go0-0/restui.nvim",
     config = function()
         require("restui").setup()
     end,
@@ -42,7 +42,7 @@ use {
 ### [junegunn/vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
-Plug 'diegomontoya/restui.nvim'
+Plug 'Di3go0-0/restui.nvim'
 
 " In your init.vim, after plug#end():
 lua require("restui").setup()
