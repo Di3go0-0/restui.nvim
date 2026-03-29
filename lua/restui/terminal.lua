@@ -3,6 +3,49 @@ local config = require("restui.config")
 
 local buf, win
 
+local function get_hl_fg(name)
+    local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = name, link = false })
+    if ok and hl.fg then return string.format("#%06x", hl.fg) end
+    return nil
+end
+
+local function get_hl_bg(name)
+    local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = name, link = false })
+    if ok and hl.bg then return string.format("#%06x", hl.bg) end
+    return nil
+end
+
+local function build_colors_arg()
+    local colors = {}
+
+    local function add(key, val)
+        if val then table.insert(colors, key .. "=" .. val) end
+    end
+
+    add("bg", get_hl_bg("Normal"))
+    add("fg", get_hl_fg("Normal"))
+    add("accent", get_hl_fg("Function") or get_hl_fg("DiagnosticInfo"))
+    add("dim", get_hl_fg("Comment"))
+    add("border", get_hl_fg("FloatBorder") or get_hl_fg("NonText"))
+    add("green", get_hl_fg("DiagnosticOk") or get_hl_fg("String"))
+    add("yellow", get_hl_fg("DiagnosticWarn") or get_hl_fg("WarningMsg"))
+    add("red", get_hl_fg("DiagnosticError") or get_hl_fg("ErrorMsg"))
+    add("blue", get_hl_fg("Function"))
+    add("magenta", get_hl_fg("Statement") or get_hl_fg("Keyword"))
+    add("cyan", get_hl_fg("Special") or get_hl_fg("Type"))
+    add("orange", get_hl_fg("Number") or get_hl_fg("Constant"))
+    add("bg_hl", get_hl_bg("CursorLine"))
+    add("gutter", get_hl_fg("LineNr"))
+    add("gutter_active", get_hl_fg("CursorLineNr"))
+    add("string", get_hl_fg("String"))
+    add("number", get_hl_fg("Number"))
+    add("keyword", get_hl_fg("Keyword") or get_hl_fg("@keyword"))
+    add("boolean", get_hl_fg("Boolean"))
+
+    if #colors == 0 then return nil end
+    return table.concat(colors, ",")
+end
+
 function M.toggle()
     if win and vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_close(win, true)
@@ -41,6 +84,12 @@ function M.toggle()
     -- Pass current working directory
     local cwd = vim.fn.getcwd()
     cmd = cmd .. " --dir " .. vim.fn.shellescape(cwd)
+
+    -- Pass nvim colorscheme colors
+    local colors = build_colors_arg()
+    if colors then
+        cmd = cmd .. " --colors " .. vim.fn.shellescape(colors)
+    end
 
     vim.fn.termopen(cmd, {
         on_exit = function()
