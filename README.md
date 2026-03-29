@@ -7,8 +7,18 @@ A Neovim plugin to open [restui](https://github.com/Di3go0-0/restui) in a floati
 - Neovim >= 0.8
 - [restui](https://github.com/Di3go0-0/restui) binary in your `PATH`
 
+Install restui via [crates.io](https://crates.io/crates/restui):
+
 ```sh
 cargo install restui
+```
+
+Or build from source:
+
+```sh
+git clone https://github.com/Di3go0-0/restui.git
+cd restui
+cargo install --path .
 ```
 
 ## Installation
