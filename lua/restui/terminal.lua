@@ -60,6 +60,50 @@ local function check_binary()
     return true
 end
 
+--- Check for updates asynchronously (compares installed vs latest on crates.io).
+local update_checked = false
+local function check_for_updates()
+    if update_checked then return end
+    update_checked = true
+
+    local cmd = config.options.restui_cmd
+    -- Get installed version
+    vim.fn.jobstart(cmd .. " --version", {
+        stdout_buffered = true,
+        on_stdout = function(_, data)
+            local installed = nil
+            for _, line in ipairs(data) do
+                local ver = line:match("(%d+%.%d+%.%d+)")
+                if ver then installed = ver break end
+            end
+            if not installed then return end
+
+            -- Check latest version on crates.io
+            vim.fn.jobstart("curl -sf https://crates.io/api/v1/crates/restui", {
+                stdout_buffered = true,
+                on_stdout = function(_, crate_data)
+                    local json_str = table.concat(crate_data, "")
+                    if json_str == "" then return end
+                    local ok, parsed = pcall(vim.json.decode, json_str)
+                    if not ok or not parsed then return end
+                    local latest = parsed.crate and parsed.crate.max_version
+                    if not latest then return end
+
+                    if latest ~= installed then
+                        vim.schedule(function()
+                            vim.notify(
+                                "restui update available: " .. installed .. " → " .. latest .. "\nRun: cargo install restui",
+                                vim.log.levels.INFO,
+                                { title = "restui.nvim" }
+                            )
+                        end)
+                    end
+                end,
+            })
+        end,
+    })
+end
+
 function M.toggle()
     if win and vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_close(win, true)
@@ -68,6 +112,7 @@ function M.toggle()
     end
 
     if not check_binary() then return end
+    check_for_updates()
 
     local opts = config.options.float_opts
     local width = math.floor(vim.o.columns * opts.width)
@@ -126,9 +171,16 @@ function M.toggle()
         end,
     })
 
-    -- Block mouse scroll to prevent terminal scrollback from corrupting the TUI
-    vim.api.nvim_buf_set_keymap(buf, "t", "<ScrollWheelUp>", "<Nop>", { noremap = true, silent = true })
-    vim.api.nvim_buf_set_keymap(buf, "t", "<ScrollWheelDown>", "<Nop>", { noremap = true, silent = true })
+    -- Block mouse events to prevent terminal scrollback from corrupting the TUI
+    local nop = { noremap = true, silent = true }
+    vim.api.nvim_buf_set_keymap(buf, "t", "<ScrollWheelUp>", "<Nop>", nop)
+    vim.api.nvim_buf_set_keymap(buf, "t", "<ScrollWheelDown>", "<Nop>", nop)
+    vim.api.nvim_buf_set_keymap(buf, "t", "<LeftMouse>", "<Nop>", nop)
+    vim.api.nvim_buf_set_keymap(buf, "t", "<2-LeftMouse>", "<Nop>", nop)
+    vim.api.nvim_buf_set_keymap(buf, "t", "<RightMouse>", "<Nop>", nop)
+    vim.api.nvim_buf_set_keymap(buf, "t", "<MiddleMouse>", "<Nop>", nop)
+    vim.api.nvim_buf_set_keymap(buf, "t", "<LeftDrag>", "<Nop>", nop)
+    vim.api.nvim_buf_set_keymap(buf, "t", "<LeftRelease>", "<Nop>", nop)
 
     vim.cmd("startinsert")
 end
