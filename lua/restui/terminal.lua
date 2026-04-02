@@ -126,6 +126,10 @@ function M.toggle()
         end,
     })
 
+    -- Block mouse scroll to prevent terminal scrollback from corrupting the TUI
+    vim.api.nvim_buf_set_keymap(buf, "t", "<ScrollWheelUp>", "<Nop>", { noremap = true, silent = true })
+    vim.api.nvim_buf_set_keymap(buf, "t", "<ScrollWheelDown>", "<Nop>", { noremap = true, silent = true })
+
     vim.cmd("startinsert")
 end
 
