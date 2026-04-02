@@ -72,7 +72,7 @@ require("restui").setup({
         border = "rounded",
     },
 
-    -- Auto-open restui when entering .http/.rest files
+    -- Auto-open restui when entering .http/.rest files (once per buffer)
     open_on_http_file = false,
 
     -- Path to environment file (optional)
@@ -80,20 +80,49 @@ require("restui").setup({
 
     -- Keymap to toggle restui (set to nil to disable)
     keymap = "<leader>rr",
+
+    -- Enable debug logging (writes to ~/.local/share/restui/restui.log)
+    debug = false,
+
+    -- Extra arguments to pass to the restui CLI
+    extra_args = {},
 })
 ```
 
 ## Usage
 
-| Command    | Description           |
-|------------|-----------------------|
-| `:Restui`  | Toggle restui window  |
+| Command               | Description                                  |
+|-----------------------|----------------------------------------------|
+| `:Restui`             | Toggle restui window                         |
+| `:RestuiKeybindings`  | Dump default keybindings to a new buffer     |
 
 Default keymap: `<leader>rr`
 
 ### Context-aware
 
-When you open restui from a `.http` or `.yaml` file, the plugin automatically passes the current file to restui via `--file`. The current working directory is also passed via `--dir`.
+When you open restui from a `.http`, `.yaml`, or `.yml` file, the plugin automatically passes the current file to restui via `--file`. The current working directory is always passed via `--dir`.
+
+### Colorscheme integration
+
+The plugin automatically extracts your Neovim colorscheme and passes it to restui via `--colors`. This means restui inherits your editor's colors out of the box — no manual theme configuration needed.
+
+### Keybindings
+
+Run `:RestuiKeybindings` to view all default keybindings in a new buffer (TOML format). You can save this as `~/.config/restui/keybindings.toml` and customize any key. See [KEYBINDINGS.md](https://github.com/Di3go0-0/restui/blob/main/KEYBINDINGS.md) for full documentation.
+
+### Debug mode
+
+Enable `debug = true` in setup to write logs to `~/.local/share/restui/restui.log`. Useful for troubleshooting.
+
+### Extra arguments
+
+Pass any additional CLI flags via `extra_args`:
+
+```lua
+require("restui").setup({
+    extra_args = { "--dump-keybindings" },
+})
+```
 
 ## License
 

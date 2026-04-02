@@ -10,6 +10,8 @@ M.defaults = {
     open_on_http_file = false,
     env_file = nil,
     keymap = "<leader>rr",
+    debug = false,
+    extra_args = {},
 }
 
 M.options = {}

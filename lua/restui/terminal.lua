@@ -46,12 +46,28 @@ local function build_colors_arg()
     return table.concat(colors, ",")
 end
 
+--- Check if the restui binary is available in PATH.
+local function check_binary()
+    local cmd = config.options.restui_cmd
+    if vim.fn.executable(cmd) == 0 then
+        vim.notify(
+            "restui not found in PATH. Install with: cargo install restui",
+            vim.log.levels.ERROR,
+            { title = "restui.nvim" }
+        )
+        return false
+    end
+    return true
+end
+
 function M.toggle()
     if win and vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_close(win, true)
         win = nil
         return
     end
+
+    if not check_binary() then return end
 
     local opts = config.options.float_opts
     local width = math.floor(vim.o.columns * opts.width)
@@ -85,10 +101,20 @@ function M.toggle()
     local cwd = vim.fn.getcwd()
     cmd = cmd .. " --dir " .. vim.fn.shellescape(cwd)
 
+    -- Debug flag
+    if config.options.debug then
+        cmd = cmd .. " --debug"
+    end
+
     -- Pass nvim colorscheme colors
     local colors = build_colors_arg()
     if colors then
         cmd = cmd .. " --colors " .. vim.fn.shellescape(colors)
+    end
+
+    -- Extra user-defined arguments
+    for _, arg in ipairs(config.options.extra_args) do
+        cmd = cmd .. " " .. arg
     end
 
     vim.fn.termopen(cmd, {
@@ -101,6 +127,26 @@ function M.toggle()
     })
 
     vim.cmd("startinsert")
+end
+
+--- Dump default keybindings to a new buffer.
+function M.dump_keybindings()
+    if not check_binary() then return end
+
+    local cmd = config.options.restui_cmd .. " --dump-keybindings"
+    local output = vim.fn.system(cmd)
+    if vim.v.shell_error ~= 0 then
+        vim.notify("Failed to dump keybindings: " .. output, vim.log.levels.ERROR)
+        return
+    end
+
+    vim.cmd("enew")
+    vim.bo.filetype = "toml"
+    vim.bo.buftype = "nofile"
+    vim.bo.bufhidden = "wipe"
+    local lines = vim.split(output, "\n")
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+    vim.bo.modified = false
 end
 
 return M
